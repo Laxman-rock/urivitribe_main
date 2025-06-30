@@ -99,7 +99,7 @@ class _PopularProductsState extends State<PopularProducts> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Popular products",
+                "Best Sellers",
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               GestureDetector(

@@ -22,7 +22,7 @@ class FlashSale extends StatelessWidget {
         // const BannerMWithCounterSkelton(),
         BannerMWithCounter(
           duration: const Duration(hours: 8),
-          text: "New narrival \n50% Off",
+          text: "New Arrival \n50% Off",
           hideCounter: true,
           press: () {},
         ),
