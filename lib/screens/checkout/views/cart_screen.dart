@@ -11,6 +11,7 @@ import '../../../User Auth/userloginscreen.dart';
 import '../../../url_auth/url_utils.dart';
 import '../../../utils/ColoUtile.dart';
 import '../../../utils/shared_pref.dart';
+import '../../../utils/payment_gateway_manager.dart';
 import '../../address/views/addresslist.dart';
 
 class CartScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _CartScreenState extends State<CartScreen> {
   int _removingItemIndex = -1;
   List<CartItem> cartItems = [];
   bool _isProcessingPayment = false;
+  Address? selectedAddress; // Store the selected address
   CartModel cartData = CartModel(
       id: '',
       currencyCode: '',
@@ -154,7 +156,7 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: cartItems.isEmpty
-          ? Image.asset("assets/images/milk_noimage.png")
+          ? Center(child: Image.asset("assets/icons/emptybox.gif",))
           : Column(
               children: [
                 Expanded(
@@ -288,14 +290,14 @@ class _CartScreenState extends State<CartScreen> {
                                   context: context,
                                   builder: (context) => const AuthScreen());
                             } else {
-                              var hasAddress = await checkAddress();
-                              if (hasAddress == false) {
+                             /*  var hasAddress = await checkAddress();
+                              if (hasAddress == false) { */
                                 var updatedTrue = false;
                                 showDialog(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        backgroundColor: Colors.white,
+                                          backgroundColor: Colors.white,
                                           titlePadding: EdgeInsets.all(0),
                                           iconPadding: EdgeInsets.all(0),
                                           insetPadding: EdgeInsets.all(0),
@@ -309,20 +311,51 @@ class _CartScreenState extends State<CartScreen> {
                                             child: Padding(
                                               padding:
                                                   const EdgeInsets.all(5.0),
-                                              child: AddressListScreen()/* AddressesScreen(
+                                              child:
+                                                  AddressListScreen() /* AddressesScreen(
                                                   isUpdated: () {
                                                 updatedTrue = true;
-                                              }) */,
+                                              }) */
+                                              ,
                                             ),
                                           ));
                                     }).then((v) {
-                                  if (updatedTrue == true) {
-                                    placeorder();
-                                  }
+                                      show_log_error('chcek receving data is   :: ${v}');
+                                      
+                                      if (v != null && v is Address) {
+                                        Address selectedAddress = v;
+                                        show_log_error('Selected Address: ${selectedAddress.title}');
+                                        show_log_error('Address Details: ${selectedAddress.fullAddress}');
+                                        show_log_error('City: ${selectedAddress.city}, Postal Code: ${selectedAddress.postalCode}');
+                                        
+                                        // Store the selected address for order processing
+                                        setState(() {
+                                          selectedAddress = selectedAddress;
+                                        });
+                                        
+                                        show_log_error('Address stored successfully: ${selectedAddress.title}');
+                                        
+                                        // Proceed with order placement
+                                        placeorder();
+                                      } else {
+                                        show_log_error('No address selected or invalid data received');
+                                        // Show a message to user that address selection is required
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Please select an address to continue'),
+                                            backgroundColor: Colors.orange,
+                                          ),
+                                        );
+                                      }
+                                      
+                                      if (updatedTrue == true) {
+                                        // This block can be removed since we're handling address selection above
+                                        // placeorder();
+                                      }
                                 });
-                              } else {
+                              /* } else {
                                 placeorder();
-                              }
+                              } */
                             }
                           }
                         },
@@ -441,6 +474,7 @@ class _CartScreenState extends State<CartScreen> {
 
   getCartDetails() async {
     try {
+      await PaymentGatewayManager.refreshPaymentConfig();
       if (cartItems.isNotEmpty) {
         setState(() {
           cartItems.clear();
@@ -511,19 +545,31 @@ class _CartScreenState extends State<CartScreen> {
       try {
         // Create payment options
         var options = {
-          'key': 'rzp_test_hTM3lEVaLnhHnX',
+          'key': SharedPrefs.getRazorpayId() ??
+              'rzp_test_hTM3lEVaLnhHnX', // Use stored Razorpay ID or fallback
           'amount': (double.parse(gettotalprice(cartItems)) * 100)
               .toInt(), // Convert to paise
           'name': 'UrviTribe',
           'description': 'Payment for your order',
+          'image': 'https://seller.urvitribe.life/wp-content/uploads/2024/12/Logo.jpg', // Use local asset or URL
           'prefill': {
             'contact': SharedPrefs.getPhone() ?? '', // Get from user profile
             'email': SharedPrefs.getEmail() ?? '', // Get from user profile
           },
           'theme': {
-            'color':
-                '#${ColorUtile.primaryColor.value.toRadixString(16).substring(2)}'
-          }
+            'color': '#${ColorUtile.primaryColor.value.toRadixString(16).substring(2)}',
+            'backdrop_color': '#FFFFFF', // Background color
+            'hide_topbar': false, // Show/hide top bar
+          },
+         /*  'modal': {
+            'confirm_close': true, // Confirm before closing
+            'escape': false, // Disable escape key
+            'handleback': true, // Handle back button
+            'ondismiss': () {
+              // Handle modal dismiss
+              show_log_error('Payment modal dismissed');
+            }
+          } */
         };
 
         _razorpay.open(options);

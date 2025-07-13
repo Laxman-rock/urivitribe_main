@@ -5,6 +5,7 @@ import 'package:urvitribe_main/components/network_image_with_loader.dart';
 import 'package:urvitribe_main/constants.dart';
 import 'package:urvitribe_main/route/screen_export.dart';
 import 'package:urvitribe_main/screens/profile/views/getHelpScreen.dart';
+import 'package:urvitribe_main/utils/payment_gateway_manager.dart';
 
 import 'components/profile_card.dart';
 import 'components/profile_menu_item_list_tile.dart';
@@ -152,6 +153,118 @@ class ProfileScreen extends StatelessWidget {
             text: "FAQ",
             svgSrc: "assets/icons/FAQ.svg",
             press: () {},
+            isShowDivider: false,
+          ),
+          const SizedBox(height: defaultPadding),
+          
+          // Payment Gateway Management Section
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: defaultPadding, vertical: defaultPadding / 2),
+            child: Text(
+              "Payment Gateway",
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          ProfileMenuListTile(
+            text: "Refresh Payment Config",
+            svgSrc: "assets/icons/Preferences.svg",
+            press: () async {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text("Refresh Configuration"),
+                  content: Text("This will refresh the payment gateway configuration from the server."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Cancel"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        bool success = await PaymentGatewayManager.refreshPaymentConfig();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success 
+                              ? "Payment configuration refreshed successfully" 
+                              : "Failed to refresh payment configuration"),
+                          ),
+                        );
+                      },
+                      child: Text("Refresh"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          ProfileMenuListTile(
+            text: "Clear Payment Config",
+            svgSrc: "assets/icons/Preferences.svg",
+            press: () async {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text("Clear Configuration"),
+                  content: Text("This will clear all stored payment gateway configuration."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Cancel"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        bool success = await PaymentGatewayManager.clearPaymentConfig();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success 
+                              ? "Payment configuration cleared successfully" 
+                              : "Failed to clear payment configuration"),
+                          ),
+                        );
+                      },
+                      child: Text("Clear"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          ProfileMenuListTile(
+            text: "Current Payment Config",
+            svgSrc: "assets/icons/Preferences.svg",
+            press: () {
+              Map<String, String?> config = PaymentGatewayManager.getCurrentConfig();
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text("Current Payment Configuration"),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("Razorpay ID: ${config['razorpayId'] ?? 'Not set'}"),
+                        SizedBox(height: 8),
+                        Text("Account: ${config['razorpayAccount'] ?? 'Not set'}"),
+                        SizedBox(height: 8),
+                        Text("Secret: ${config['razorpaySecret'] != null ? '***' : 'Not set'}"),
+                        SizedBox(height: 8),
+                        Text("Webhook Secret: ${config['razorpayWebhookSecret'] != null ? '***' : 'Not set'}"),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("OK"),
+                    ),
+                  ],
+                ),
+              );
+            },
             isShowDivider: false,
           ),
           const SizedBox(height: defaultPadding),

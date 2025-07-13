@@ -1,13 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:urvitribe_main/components/product/product_card.dart';
 import 'package:urvitribe_main/models/product_model.dart';
 import 'package:urvitribe_main/route/screen_export.dart';
 
 import '../../../../Constants/constants.dart';
 import '../../../../Services/Api_Controls/api_call.dart';
-import '../../../../components/skleton/product/products_skelton.dart';
 import '../../../../constants.dart';
 import '../../../../url_auth/url_utils.dart';
 import '../../../bookmark/views/productview.dart';

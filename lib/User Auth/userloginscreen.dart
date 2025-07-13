@@ -116,11 +116,17 @@ class _AuthScreenState extends State<AuthScreen> {
           await SharedPrefs.setIsLoggedIn(true);
           var hasAddress = await checkAddress();
           setState(() {
-            if (hasAddress == true) {
-              assigedcarttouser(token);
-            } else {
+            assigedcarttouser(token).then(
+              (value) {
+                setState(() {
+                  _isLoading = false;
+                });
+                Navigator.pop(context);
+              },
+            );
+            /* } else {
               var updatedTrue = false;
-              showDialog(
+             /*  showDialog(
                   context: context,
                   builder: (context) {
                     return AlertDialog(content: AddressesScreen(isUpdated: () {
@@ -130,13 +136,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 if (updatedTrue == true) {
                   assigedcarttouser(token);
                 }
-              });
-            }
+              }); */
+            } */
           });
-          setState(() {
-            _isLoading = false;
-          });
-          Navigator.pop(context);
         } else if (response.statusCode == 401) {
           var responseData = jsonDecode(response.body);
           showToast(responseData['message']);

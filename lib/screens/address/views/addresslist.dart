@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:urvitribe_main/Services/Api_Controls/api_call.dart';
+import 'package:urvitribe_main/constants.dart';
 
 import '../../../Constants/constants.dart';
 import '../../../url_auth/url_utils.dart';
@@ -23,6 +25,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
   }
 
   List<Address> addresses = [];
+  Address? selectedAddress; // Store the selected address
   getAddressList() async {
     // Example: Fetch addresses from API and assign to addresses list
     // Replace this with your actual API call and parsing logic
@@ -41,10 +44,27 @@ class _AddressListScreenState extends State<AddressListScreen> {
             addresses = addressList
                 .map((item) => Address(
                       id: item["id"].toString(),
-                      title: item["title"] ?? '',
-                      fullAddress: item["fullAddress"] ?? '',
-                      phoneNumber: item["phoneNumber"] ?? '',
+                      title: item["address_name"] ?? '',
+                      fullAddress: "${item["address_1"]} \n ${item["address_2"] ?? ''}" ?? '',
+                      phoneNumber: item["phone"] ?? '',
                       isHome: item["isHome"] ?? false,
+                      isDefaultShipping: item["is_default_shipping"] ?? false,
+                      isDefaultBilling: item["is_default_billing"] ?? false,
+                      company: item["company"],
+                      firstName: item["first_name"],
+                      lastName: item["last_name"],
+                      address1: item["address_1"] ?? '',
+                      address2: item["address_2"],
+                      city: item["city"] ?? '',
+                      countryCode: item["country_code"] ?? '',
+                      province: item["province"] ?? '',
+                      postalCode: item["postal_code"] ?? '',
+                      phone: item["phone"],
+                      metadata: item["metadata"],
+                      customerId: item["customer_id"] ?? '',
+                      createdAt: item["created_at"] ?? '',
+                      updatedAt: item["updated_at"] ?? '',
+                      deletedAt: item["deleted_at"],
                     ))
                 .toList();
           });
@@ -113,7 +133,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
                               width: MediaQuery.of(context).size.width,
                               child: Padding(
                                 padding: const EdgeInsets.all(5.0),
-                                child: AddressesScreen(isUpdated: () {
+                                child: AddressesScreen(
+                                  isUpdated: () {
                                   updatedTrue = true;
                                 }),
                               ),
@@ -160,15 +181,71 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   final address = addresses[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: AddressCard(
-                      address: address,
-                      onEdit: () => _editAddress(address),
-                      onDelete: () => _deleteAddress(address.id),
+                    child: InkWell(
+                      onTap: () {
+                        // Select the address and highlight it
+                        setState(() {
+                          selectedAddress = address;
+                        });
+                        show_log_error('Address selected: ${address.title}');
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.transparent,
+                        ),
+                        child: AddressCard(
+                          address: address,
+                          isSelected: selectedAddress?.id == address.id,
+                          onEdit: () => _editAddress(address),
+                          onDelete: () => _deleteAddress(address.id),
+                        ),
+                      ),
                     ),
                   );
                 },
               ),
             ),
+            
+            // Proceed Payment Button
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Handle proceed payment
+                  if (selectedAddress != null) {
+                    show_log_error('Proceed Payment with selected address: ${selectedAddress!.title}');
+                    Navigator.pop(context, selectedAddress);
+                  } else {
+                    // Show message to select an address first
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please select an address first'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Proceed Payment',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            
           ],
         ),
       ),
@@ -211,12 +288,14 @@ class _AddressListScreenState extends State<AddressListScreen> {
 
 class AddressCard extends StatelessWidget {
   final Address address;
+  final bool isSelected;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const AddressCard({
     Key? key,
     required this.address,
+    this.isSelected = false,
     required this.onEdit,
     required this.onDelete,
   }) : super(key: key);
@@ -227,11 +306,13 @@ class AddressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isSelected ? Colors.blue[50] : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: address.isHome ? Colors.blue[200]! : Colors.grey[200]!,
-          width: address.isHome ? 1.5 : 1,
+          color: isSelected 
+              ? Colors.blue[400]! 
+              : (address.isHome ? Colors.blue[200]! : Colors.grey[200]!),
+          width: isSelected ? 2.0 : (address.isHome ? 1.5 : 1),
         ),
       ),
       child: Column(
@@ -242,21 +323,30 @@ class AddressCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: address.isHome ? Colors.blue[50] : Colors.grey[100],
+                  color: isSelected 
+                      ? Colors.blue[100] 
+                      : (address.isHome ? Colors.blue[50] : Colors.grey[100]),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  address.isHome
-                      ? Icons.home_outlined
-                      : Icons.business_outlined,
-                  color: address.isHome ? Colors.blue : Colors.grey[600],
-                  size: 15,
+                  isSelected 
+                      ? Icons.check_circle
+                      : (address.isHome ? Icons.home_outlined : Icons.business_outlined),
+                  color: isSelected 
+                      ? Colors.blue[600] 
+                      : (address.isHome ? Colors.blue : Colors.grey[600]),
+                  size: isSelected ? 18 : 15,
                 ),
               ),
               const SizedBox(width: 5),
               Expanded(
-                child: Text(address.title,
-                    style: Theme.of(context).textTheme.titleSmall),
+                child: Text(
+                  address.title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? Colors.blue[700] : null,
+                  ),
+                ),
               ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.grey),
@@ -284,8 +374,14 @@ class AddressCard extends StatelessWidget {
           Text(address.fullAddress,
               style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 5),
-          Text(address.phoneNumber,
-              style: Theme.of(context).textTheme.bodySmall)
+          Text('${address.city} - ${address.postalCode}',
+              style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 5),
+          Text('${address.province}',
+              style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 5),
+          Text(address.countryCode,
+              style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -298,6 +394,23 @@ class Address {
   final String fullAddress;
   final String phoneNumber;
   final bool isHome;
+  final bool isDefaultShipping;
+  final bool isDefaultBilling;
+  final String? company;
+  final String? firstName;
+  final String? lastName;
+  final String address1;
+  final String? address2;
+  final String city;
+  final String countryCode;
+  final String province;
+  final String postalCode;
+  final String? phone;
+  final String? metadata;
+  final String customerId;
+  final String createdAt;
+  final String updatedAt;
+  final String? deletedAt;
 
   Address({
     required this.id,
@@ -305,5 +418,22 @@ class Address {
     required this.fullAddress,
     required this.phoneNumber,
     required this.isHome,
+    required this.isDefaultShipping,
+    required this.isDefaultBilling,
+    this.company,
+    this.firstName,
+    this.lastName,
+    required this.address1,
+    this.address2,
+    required this.city,
+    required this.countryCode,
+    required this.province,
+    required this.postalCode,
+    this.phone,
+    this.metadata,
+    required this.customerId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
   });
 }

@@ -19,10 +19,10 @@ class UrlUtils {
 
 //create cart id
   static String getCartUrl() => '${getBaseUrl()}/store/cart'; 
-  static String getStoreConfiguration() => '${getBaseUrl()}/store/configurations/'; 
+  static String getStoreConfiguration() => '${getBaseUrl()}/store/configurations'; 
   static String updateCustomersAddress() => '${getBaseUrl()}/store/customers/me/addresses'; 
   static String updateAddressAPI() => '${getBaseUrl()}/store/customers/me/addresses'; 
-  static String getCustomers() => '${getBaseUrl()}/store/customers/me/'; 
+  static String getCustomers() => '${getBaseUrl()}/store/customers/me'; 
 
   //get cart details
   static String getCartByIdUrl(String id) => '${getBaseUrl()}/store/carts';

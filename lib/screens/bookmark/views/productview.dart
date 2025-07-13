@@ -103,7 +103,7 @@ class _ProductsViewState extends State<ProductsView> {
         var body = (json.decode(response.body)['products'] as List);
         setState(() {
           for (var data in body) {
-            show_log_error("the data in fetchCategories is ${data}");
+            show_log_error("the data in fetchCategories products is ${data}");
 
             kProducts.add(ProductModel(
                 image: data["thumbnail"] ?? "",

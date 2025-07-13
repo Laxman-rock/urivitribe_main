@@ -103,17 +103,17 @@ String fmt(String prefix, String suffix) {
 
 checkAddress() async {
   try {
-    var isExist = SharedPrefs.instance.getString("addressInfo");
+  /*   var isExist = SharedPrefs.instance.getString("addressInfo");
     show_log_error("isExist is ${isExist}");
 
     if (isExist != null) {
       return true;
-    }
-    var response = await getCall(UrlUtils.getCustomers(), headers3);
+    } */
+    var response = await getCall(UrlUtils.updateAddressAPI(), headers3);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       var body = jsonDecode(response.body)["customer"];
-      show_log_error("the response for customer is ${UrlUtils.getCustomers()}");
+      show_log_error("the response for customer is ${UrlUtils.updateAddressAPI()}");
       show_log_error("the response for customer is ${body["addresses"]}");
       if (body["addresses"] == []) {
         return false;

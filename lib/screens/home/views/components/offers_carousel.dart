@@ -56,6 +56,11 @@ class _OffersCarouselState extends State<OffersCarousel> {
     super.initState();
   }
 
+  // Method to refresh configuration
+  Future<void> refreshConfiguration() async {
+    await fetchCategories();
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -122,19 +127,39 @@ class _OffersCarouselState extends State<OffersCarousel> {
           await getCall('${UrlUtils.getStoreConfiguration()}', headers2);
       print("banners is  ${bannerresponse.body}");
       print("banners is  storeconfig ${storeconfig.body}");
+      // Store the entire configs
       SharedPrefs.instance.setString(
           "configs", jsonEncode(jsonDecode(storeconfig.body)["config"]));
+      
+      // Extract and store Razorpay configuration
+      try {
+        var configData = jsonDecode(storeconfig.body);
+        if (configData["configs"] != null && configData["configs"].isNotEmpty) {
+          var defaultConfig = configData["configs"][0]; // Get the first config (default)
+          if (defaultConfig["config"] != null) {
+            var razorpayConfig = defaultConfig["config"];
+            
+            // Store Razorpay configuration
+            await SharedPrefs.setRazorpayId(razorpayConfig["RAZORPAY_ID"] ?? "");
+            await SharedPrefs.setRazorpaySecret(razorpayConfig["RAZORPAY_SECRET"] ?? "");
+            await SharedPrefs.setRazorpayAccount(razorpayConfig["RAZORPAY_ACCOUNT"] ?? "");
+            await SharedPrefs.setRazorpayWebhookSecret(razorpayConfig["RAZORPAY_WEBHOOK_SECRET"] ?? "");
+            
+            print("Razorpay configuration stored successfully");
+          }
+        }
+      } catch (e) {
+        print("Error storing Razorpay configuration: $e");
+      }
       // print(response.statusCode);
       print("bannerresponse.statusCode is ${bannerresponse.statusCode}");
 
       if (bannerresponse.statusCode >= 200 || bannerresponse.statusCode < 301) {
         var body = jsonDecode(bannerresponse.body)["banners"];
         offers = [];
-
         show_log_error("the body of content is $body");
         for (var data in body) {
           offers.add(BannerMStyle1(
-
               text: data["title"],
               subTitle: data["subtxt"],
               press: () {},

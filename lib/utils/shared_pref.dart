@@ -12,6 +12,10 @@ class SharedPrefs {
   static const _kCartId = 'cartId'; 
   static const _kEmail = 'email';
   static const _kPhone = 'phone';
+  static const _kRazorpayId = 'razorpayId';
+  static const _kRazorpaySecret = 'razorpaySecret';
+  static const _kRazorpayAccount = 'razorpayAccount';
+  static const _kRazorpayWebhookSecret = 'razorpayWebhookSecret';
 
   static SharedPreferences? _instance;
 
@@ -50,6 +54,17 @@ class SharedPrefs {
       instance.setString(_kEmail, value);
   static Future<bool> setPhone(String value) =>
       instance.setString(_kPhone, value);
+  
+  // Razorpay configuration methods
+  static Future<bool> setRazorpayId(String value) =>
+      instance.setString(_kRazorpayId, value);
+  static Future<bool> setRazorpaySecret(String value) =>
+      instance.setString(_kRazorpaySecret, value);
+  static Future<bool> setRazorpayAccount(String value) =>
+      instance.setString(_kRazorpayAccount, value);
+  static Future<bool> setRazorpayWebhookSecret(String value) =>
+      instance.setString(_kRazorpayWebhookSecret, value);
+  
   static String? getAccessToken() => instance.getString(_kAccessToken);
   static String? getFirebaseAccessToken() =>
       instance.getString(_kFirebaseAccessToken);
@@ -62,4 +77,19 @@ class SharedPrefs {
   static String? getCartId() => instance.getString(_kCartId); 
   static String? getEmail() => instance.getString(_kEmail);
   static String? getPhone() => instance.getString(_kPhone);
+  
+  // Razorpay configuration getters
+  static String? getRazorpayId() => instance.getString(_kRazorpayId);
+  static String? getRazorpaySecret() => instance.getString(_kRazorpaySecret);
+  static String? getRazorpayAccount() => instance.getString(_kRazorpayAccount);
+  static String? getRazorpayWebhookSecret() => instance.getString(_kRazorpayWebhookSecret);
+  
+  // Clear Razorpay configuration
+  static Future<bool> clearRazorpayConfig() async {
+    await instance.remove(_kRazorpayId);
+    await instance.remove(_kRazorpaySecret);
+    await instance.remove(_kRazorpayAccount);
+    await instance.remove(_kRazorpayWebhookSecret);
+    return true;
+  }
 }
